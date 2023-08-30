@@ -1,0 +1,18 @@
+---
+subject_id: Biology
+topic_id: Cell
+subtopic_id: Cell organelles
+title: Choose the Anaphase stage in the following
+question: 'Choose the Anaphase stage in the following:'
+answer_type: MCQ_single
+choices:
+- "{{img:pic1}}"
+- "{{img:pic2}}"
+- "{{img:pic3}}"
+- "{{img:pic4}}"
+points: 1
+embeds:
+  pic1: dsfghytt54e6u5rgrf.jpg
+  pic3: dsfghytt54e6u5rfgdd.jpg
+  pic2: dsfghytt54e6u5ruilk.jpg
+  pic4: dsfghytt54e6u524rd.jpg

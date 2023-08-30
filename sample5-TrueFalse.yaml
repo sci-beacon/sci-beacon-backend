@@ -1,0 +1,13 @@
+---
+subject_id: Biology
+topic_id: Cell
+subtopic_id: Cell organelles
+title: True or False (cell organelles)
+question: 'State whether the following questions are true or false:'
+answer_type: TrueFalse
+statements:
+- Proteins are made on ribosomes
+- Prokaryotic cells have a nucleus
+- Organelles are located within the cytoplasm
+- MitoPlasma membrane acts as a selective permeable membrane
+points: 2

@@ -1,0 +1,10 @@
+---
+subject_id: Biology
+topic_id: Cell
+subtopic_id: Cell organelles
+title: Label the following diagram 
+question: |
+  Label the following diagram
+  {{img:pic1}}
+answer_type: InQuestion
+points: 4

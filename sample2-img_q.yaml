@@ -1,0 +1,17 @@
+---
+subject_id: Biology
+topic_id: Cell
+subtopic_id: Cell organelles
+title: Identify this organelle
+question: |
+  Identify this organelle.
+  {{img:pic1}}
+answer_type: MCQ_single
+choices:
+- Rough endoplasmic reticulum
+- Smooth endoplasmic reticulum
+- Cell wall
+- Cell membrane
+points: 1
+embeds:
+  pic1: dsfghytt54e6u5rgrf.jpg

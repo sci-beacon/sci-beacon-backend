@@ -1,0 +1,14 @@
+---
+subject_id: Biology
+topic_id: Cell
+subtopic_id: Cell organelles
+title: organelles absent in animal cells and present in a plant cell
+question: Which of the following cell organelles is absent in animal cells and present
+  in a plant cell?
+answer_type: MCQ_single
+choices:
+- Cell wall
+- Cytoplasm
+- Vacuoles
+- Mitochondria
+points: 1

@@ -1,0 +1,18 @@
+---
+subject_id: Biology
+topic_id: Cell
+subtopic_id: Cell organelles
+title: Match the following (cell organelles)
+question: 'Match the following:'
+answer_type: MTF
+left_side:
+- Cell membrane
+- Free ribosomes
+- Mitochondria
+- Vacuoles
+right_side:
+- Cellular respiration
+- Selective Barrier
+- Storage
+- Protein synthesis
+points: 1
