@@ -50,3 +50,16 @@ def embeds2dict(eArr):
     for d in eArr:
         embeds.update(d)
     return embeds
+
+
+def remove_sql_comments(sql):
+    # from chatgpt
+    lines = sql.split('\n')
+    cleaned_lines = []
+
+    for line in lines:
+        cleaned_line = line.split('--')[0].strip()
+        cleaned_lines.append(cleaned_line)
+
+    cleaned_sql = '\n'.join(cleaned_lines)
+    return cleaned_sql

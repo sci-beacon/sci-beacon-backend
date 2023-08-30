@@ -3,6 +3,8 @@ import sqlite3
 import os
 import pandas as pd
 
+from commonfuncs import remove_sql_comments
+
 root = os.path.dirname(__file__)
 DB_FILENAME = os.environ.get("DB_FILENAME","questionbank.db")
 DB_FOLDER = os.environ.get("DB_FOLDER","data/database")
@@ -96,7 +98,9 @@ def initiate():
         print(f"Creating {DB_FILENAME}")
         with open(os.path.join(root,'dbschema.sql'), 'r') as f:
             sql = f.read()
-        statements = sql.split(';')
+        
+        clean_sql = remove_sql_comments(sql)
+        statements = clean_sql.split(';')
         for statement in statements:
             execSQL(statement)
 

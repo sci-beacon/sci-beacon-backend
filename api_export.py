@@ -142,7 +142,7 @@ class export_payload(BaseModel):
     question_ids: List[int]
 
 
-@app.post("/api/export", tags=["questions"])
+@app.post("/api/questions/export", tags=["questions"])
 def export(r: export_payload):
     global exportFolder, alphabet_list, PAGE_W, PAGE_H
     
