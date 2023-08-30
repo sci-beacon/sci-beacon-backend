@@ -21,16 +21,6 @@ def create_unique_slug(text, existing_slugs):
         return slug
 
 
-
-if __name__ == "__main__":
-    # Test create_unique_slug
-    title = "Cell organelles"
-    # List of existing slugs (for testing purposes)
-    existing_slugs = ["example", "unique01", "slug02", "thisisates", "thisisatesttitle","thisisatesttitle-001"]
-    slug = create_unique_slug(title, existing_slugs)
-    print(slug)  # Output will be "thisisatest"
-
-
 def quoteNcomma(a):
     # turn array into sql IN query string: 'a','b','c'
     holder = []
@@ -47,3 +37,16 @@ def dict2yaml(d):
     output_stream = StringIO()
     YAML().dump(d, output_stream)
     return output_stream.getvalue()
+
+
+def split_string_with_placeholders(input_string):
+    # from chatgpt
+    img_placeholders = re.findall(r'{{img:(.*?)}}', input_string)
+    non_placeholder_parts = re.split(r'{{img:.*?}}', input_string)
+    return img_placeholders, non_placeholder_parts
+
+def embeds2dict(eArr):
+    embeds = {}
+    for d in eArr:
+        embeds.update(d)
+    return embeds

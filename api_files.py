@@ -26,10 +26,6 @@ def saveImage(f, idf):
     im = Image.open(f, mode='r')
     im1 = ImageOps.exif_transpose(im) # auto-rotate mobile photos. from https://stackoverflow.com/a/63798032/4355695
     
-    # # save thumbnail
-    # im2 = ImageOps.fit(im1, (150,200))
-    # im2.save(os.path.join(observationsThumbnailsFolder, idf))
-
     # save picture, but downsized to 2000x2000 dimensions (in case its big) to optimize storage
     w, h = im1.size
     if(h > 1000 or w > 1000):

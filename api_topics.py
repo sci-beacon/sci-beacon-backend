@@ -29,10 +29,7 @@ def fetchTopics():
         "message": "success"
     }
     returnD["data"] = df1.to_dict(orient="records")
-
-    # df1_subject = df1[['subject_id', 'subject_name']].drop_duplicates().sort_values('subject_name')
-    # returnD['subjects'] = df1_subject.to_dict(orient="records")
-        
+    
     return returnD
 
 
