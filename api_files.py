@@ -32,7 +32,8 @@ def saveImage(f, idf):
         im3 = ImageOps.contain(im1, (1000,1000))
         im3.save(os.path.join(uploadFolder, idf))
     else:
-        im1.save(os.path.join(uploadFolder, idf))
+        im1.save(os.path.join(uploadFolder, idf), "WEBP")
+        # save it in webp format regardless of what uploaded format was
 
     return
 
@@ -56,7 +57,7 @@ def uploadFile(
     if extension not in ('jpg','png','jpeg','webp'):
         raise HTTPException(status_code=400, detail="Invalid files")
     
-    new_filename = f"{str(uuid.uuid4())}.{extension}"
+    new_filename = f"{str(uuid.uuid4())}.webp"
 
     saveImage(file1.file, new_filename)
 
