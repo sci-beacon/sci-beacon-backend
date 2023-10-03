@@ -1,7 +1,8 @@
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from brotli_asgi import BrotliMiddleware
+from fastapi.staticfiles import StaticFiles # static html files deploying
 
 root = os.path.dirname(__file__)
 
@@ -24,3 +25,14 @@ import api_questions
 import api_topics
 import api_files
 import api_export
+
+
+root = os.path.dirname(__file__)
+UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", "data/uploads")
+uploadFolder = os.path.join(root, UPLOAD_FOLDER)
+
+EXPORT_FOLDER = os.environ.get("EXPORT_FOLDER", "data/exports")
+exportFolder = os.path.join(root, EXPORT_FOLDER)
+
+app.mount("/images", StaticFiles(directory=uploadFolder, html = False), name="images")
+app.mount("/exports", StaticFiles(directory=exportFolder, html = False), name="exports")

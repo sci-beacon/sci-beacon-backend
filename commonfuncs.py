@@ -63,3 +63,66 @@ def remove_sql_comments(sql):
 
     cleaned_sql = '\n'.join(cleaned_lines)
     return cleaned_sql
+
+
+def int_to_letter(N):
+    if 0 <= N < 26:
+        return chr(ord('a') + N )
+    else:
+        return None
+
+
+def html_formatting(x, embeds={}):
+    if "\n" in x:
+        x = x.replace('\n','<br>')
+    if r"{{img:" in x:
+        # print(f"Got image placeholder in {key}: {x}")
+        for placeholder in embeds.keys():
+            if f"{{{{img:{placeholder}}}}}" in x:
+                x = x.replace(
+                    f"{{{{img:{placeholder}}}}}", 
+                    f"""<img class="qbpreview" src="IMAGEPATH/{embeds[placeholder]}"> """
+                )
+    return x
+
+
+def render_html(content_yaml):
+    content = yaml2dict(content_yaml)
+    embeds = embeds2dict(content.get('embeds',[]))
+
+    for key in content.keys():
+        if not isinstance(content[key],str):
+            continue
+
+        content[key] = html_formatting(content[key], embeds=embeds)
+
+    
+    html_content = f"""<p>{content.get('question')}</p>
+    """
+    if content['answer_type'] == "TrueFalse":
+        html_content += "<ol>"
+        for N, statement in enumerate(content['statements']):
+            html_content += f"<li>{html_formatting(statement, embeds=embeds)} - ______</li>"
+        html_content += "</ol>"
+        
+    elif content['answer_type'] == "MCQ_single":
+        html_content += """<ol class="mcq">"""
+        for N, choice in enumerate(content['choices']):
+            html_content += f"<li>{html_formatting(choice, embeds=embeds)}</li>"
+        html_content += "</ol>"
+
+    elif content['answer_type'] == "MTF":
+        html_content += """<div class="row table_mtf">
+        <div class="col-md-6">
+        """
+        for N, statement in enumerate(content['left_side']):
+            html_content += f"""<p>{int_to_letter(N)}. {statement}</p>"""
+        
+        html_content += """</div> <div class="col-md-6">"""
+        for N, statement in enumerate(content['right_side']):
+            html_content += f"""<p>{N+1}. {statement}</p>"""
+
+        html_content += "</div></div>"
+    
+    return html_content
+

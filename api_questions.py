@@ -21,29 +21,34 @@ uploadFolder = os.path.join(root, UPLOAD_FOLDER)
 
 @app.get("/api/questions/list", tags=["questions"])
 def questionsList(
-    category: str,
-    value: str,
+    category: str = None,
+    value: str = None,
 ):
-    if category not in ("subject_id", "topic_id", "subtopic_id"):
-        raise HTTPException(status_code=400, detail="Invalid category")
+    if category in ("subject_id", "topic_id", "subtopic_id"):
+        pattern = "^[a-z0-9-]+$"
+        if not re.match(pattern, value):
+            raise HTTPException(status_code=400, detail="Invalid value")
+        whereClause = f"where t2.{category} = '{value}'"
 
-    pattern = "^[a-z0-9-]+$"
-    if not re.match(pattern, value):
-        raise HTTPException(status_code=400, detail="Invalid value")
+    else:
+        whereClause = ""
 
-    s1 = f"""select t1.id, t1.subtopic_id, t1.title, t1.content, t1.embeds, 
-    t2.subject_name, t2.topic_name, t2.subtopic_name
+    s1 = f"""select t1.id, t1.subtopic_id, t1.title, t1.content, 
+    t2.subject_name, t2.topic_name, t2.subtopic_name,
+    t2.topic_id, t2.subject_id
     from questionbank as t1
     left join topics as  t2
     on t1.subtopic_id = t2.subtopic_id
-    where t2.{category} = '{value}'
+    {whereClause}
+    
     """
 
     df1 = dbconnect.makeQuery(s1, output="df")
     if not len(df1):
         return {"message": "no questions found for this selection", "data": []}
 
-    df1["embeds"] = df1["embeds"].apply(json.loads)
+    df1["preview"] = df1['content'].apply(cf.render_html)
+    # del df1['content']
 
     returnD = {"data": df1.to_dict(orient="records")}
     return returnD

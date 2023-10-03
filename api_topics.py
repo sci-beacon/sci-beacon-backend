@@ -29,7 +29,10 @@ def fetchTopics():
         "message": "success"
     }
     returnD["data"] = df1.to_dict(orient="records")
-    
+
+    returnD["subject_id_list"] = df1[["subject_id","subject_name"]].drop_duplicates().to_dict(orient='records')    
+    returnD["topic_id_list"] = df1[["topic_id","topic_name"]].drop_duplicates().to_dict(orient='records')
+    returnD["subtopic_id_list"] = df1[["subtopic_id","subtopic_name"]].drop_duplicates().to_dict(orient='records')
     return returnD
 
 
@@ -88,3 +91,32 @@ def addTopic(r: add_topic_payload ):
         raise HTTPException(status_code=400, detail="Valid topic_id needed")
         
     
+###############
+
+@app.get("/api/topics/dropdown", tags=["topics"])
+def fetchDropdown(
+    parent_category: str = None,
+    value: str = None,
+):
+
+    s1 = "select distinct subject_id, subject_name from topics"
+    
+    if parent_category:
+        if not value:
+            raise HTTPException(status_code=400, detail="Missing value")
+
+        if parent_category == "subject_id":
+            s1 = f"select distinct topic_id, topic_name from topics where subject_id = '{value}'"
+        else:
+            s1 = f"select distinct subtopic_id, subtopic_name from topics where topic_id = '{value}'"
+
+    df1 = dbconnect.makeQuery(s1, output="df")
+
+    if not len(df1):
+        return {"message": "no topics for this", "data": []}
+    
+    returnD = {
+        "message": "success"
+    }
+    returnD["data"] = df1.to_dict(orient="records")
+    return returnD

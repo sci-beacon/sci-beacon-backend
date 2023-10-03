@@ -184,7 +184,7 @@ def export(r: export_payload):
             # default: assume InQuestion
             doc.add_paragraph("")
 
-    filename = f"{str(uuid.uuid4())}.docx"
+    filename = f"questionpaper_{str(uuid.uuid4())}.docx"
     doc.save(os.path.join(exportFolder, filename))
 
     return {"filename": filename}
