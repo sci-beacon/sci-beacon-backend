@@ -6,9 +6,9 @@ import pandas as pd
 from commonfuncs import remove_sql_comments
 
 root = os.path.dirname(__file__)
-DB_FILENAME = os.environ.get("DB_FILENAME","questionbank.db")
+DB_FILENAME_ADMIN = os.environ.get("DB_FILENAME_ADMIN","admin.db")
+DB_SCHEMAFILE_ADMIN = os.environ.get("DB_SCHEMAFILE_ADMIN","dbschema-admin.sql")
 DB_FOLDER = os.environ.get("DB_FOLDER","data/database")
-DB_SCHEMAFILE = os.environ.get("DB_SCHEMAFILE","dbschema.sql")
 dbFolder = os.path.join(root, DB_FOLDER)
 os.makedirs(dbFolder, exist_ok=True)
 
@@ -41,9 +41,9 @@ def makeQuery(
         else:
             print(f"Query: {' '.join(s1.split())[:20]}")
 
-    global dbFolder, DB_FILENAME
+    global dbFolder, DB_FILENAME_ADMIN
     # Make SQLite connection in read-only mode
-    conn = sqlite3.connect(f"file:{os.path.join(dbFolder, DB_FILENAME)}?mode=ro", uri=True)
+    conn = sqlite3.connect(f"file:{os.path.join(dbFolder, DB_FILENAME_ADMIN)}?mode=ro", uri=True)
     df1 = pd.read_sql_query(s1, conn)
     conn.close()
 
@@ -77,8 +77,8 @@ def execSQL(s1, noprint=False):
     if not noprint:
         print(" ".join(s1.split()))
     
-    global dbFolder, DB_FILENAME
-    conn = sqlite3.connect(os.path.join(dbFolder, DB_FILENAME ))
+    global dbFolder, DB_FILENAME_ADMIN
+    conn = sqlite3.connect(os.path.join(dbFolder, DB_FILENAME_ADMIN ))
     cursor = conn.cursor()
     try:
         cursor.execute(s1)
@@ -93,11 +93,12 @@ def execSQL(s1, noprint=False):
 
     return affected
 
+
 def initiate():
-    global dbFolder, DB_FILENAME, DB_SCHEMAFILE
-    if not os.path.isfile(os.path.join(dbFolder, DB_FILENAME )):
-        print(f"Creating {DB_FILENAME}")
-        with open(os.path.join(root, DB_SCHEMAFILE), 'r') as f:
+    global dbFolder, DB_FILENAME_ADMIN, DB_SCHEMAFILE_ADMIN
+    if not os.path.isfile(os.path.join(dbFolder, DB_FILENAME_ADMIN )):
+        print(f"Creating {DB_FILENAME_ADMIN}")
+        with open(os.path.join(root, DB_SCHEMAFILE_ADMIN), 'r') as f:
             sql = f.read()
         
         clean_sql = remove_sql_comments(sql)
@@ -106,7 +107,7 @@ def initiate():
             execSQL(statement)
 
     else:
-        print(f"Found {DB_FILENAME}")
+        print(f"Found {DB_FILENAME_ADMIN}")
 
 # startup: initiate if db not found
 initiate()

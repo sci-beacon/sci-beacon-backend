@@ -73,6 +73,7 @@ def add_question(r: add_question_payload):
 
     title = contentD.get("title", None)
     embedsList = r.embeds
+    # what r.embeds should look like: [{"img1": "gt4d.webp"}, {"img2": "ghjuy654edfghy.webp"}]
 
     # validation of content fields
     # if (not title) or (not question) or (not answer_type):
@@ -114,4 +115,21 @@ def add_question(r: add_question_payload):
     i1Count = dbconnect.execSQL(i1)
 
     returnD = {"message": "Question added successfully"}
+    return returnD
+
+
+
+@app.get("/api/questions/templates", tags=["questions"])
+async def question_templates():
+
+    # ANSWER_TYPES = ("MCQ_single", "InQuestion", "TrueFalse", "MTF")
+    data = {}
+
+    with open("sample1.yaml","r") as f:
+        data['Multiple Choice Question'] = f.read()
+    
+    with open("sample4-MTF.yaml","r") as f:
+        data['Match the Following'] = f.read()
+
+    returnD = {"data": data}
     return returnD

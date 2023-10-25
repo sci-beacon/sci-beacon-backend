@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS topics (
     subject_name TEXT,
     topic_id TEXT,
     topic_name TEXT,
-    subtopic_id TEXT,
+    subtopic_id TEXT UNIQUE,
     subtopic_name TEXT
 );
 
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS topics (
 CREATE TABLE IF NOT EXISTS questionbank (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     subtopic_id TEXT,
-    title TEXT,
+    title TEXT UNIQUE,
     content TEXT,
     embeds TEXT,
     created TIMESTAMP DEFAULT (datetime('now', 'utc')),
@@ -22,6 +22,4 @@ CREATE TABLE IF NOT EXISTS questionbank (
 
 INSERT OR IGNORE INTO topics (id, subject_id, subject_name, topic_id, topic_name, subtopic_id, subtopic_name) VALUES
 (1, 'biology', 'Biology', 'cell', 'Cell', 'cellorganelles', 'Cell organelles');
-
-
 
