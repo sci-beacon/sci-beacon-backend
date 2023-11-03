@@ -1,6 +1,6 @@
 # api_topics.py
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Header
 from pydantic import BaseModel
 from typing import List
 
@@ -39,57 +39,74 @@ def fetchTopics():
 ##########
 
 class add_topic_payload(BaseModel):
-    # category: str
-    # parent_id: str
-    subtopic_name: str
-    topic_id: str = None
-    topic_name: str = None
-    subject_id: str = None
-    subject_name: str = None
-
+    subject: str
+    topic: str
+    subtopic: str
+    
 @app.post("/api/topics/add", tags=["topics"])
-def addTopic(r: add_topic_payload ):
-    if r.topic_id:
-        # check if the topic exists
-        s1 = f"select subject_id, subject_name, topic_name from topics where topic_id = '{r.topic_id}'"
-        subjectRow = dbconnect.makeQuery(s1, output="oneJson")
+def addTopic(r: add_topic_payload, x_access_token: str = Header(...) ):
+    # check if subject and topic are existing *_id values. else create their slugs.
+    print("addTopic POST api call")
 
-        if not subjectRow:
-            raise HTTPException(status_code=400, detail="Invalid topic_id")
+    new_subject = False
+    new_topic = False
 
-        print(f"subjectRow: {subjectRow}")
-        
-        # create slug
-        s2 = f"""select subtopic_id from topics
-        where topic_id = '{r.topic_id}'
-        """
-        existing_slugs = dbconnect.makeQuery(s2, output="column")
-        print(f"existing_slugs: {existing_slugs}")
-        subtopic_id = cf.create_unique_slug(r.subtopic_name, existing_slugs)
+    # fetch everything
+    s1 = "select * from topics"
+    df1 = dbconnect.makeQuery(s1, output="df")
 
+    # check if subject existing
+    df2 = df1[df1['subject_id']== r.subject].copy()
+    if len(df2):
+        subject_id = r.subject
+        subject_name = df2['subject_name'].values[0]
 
-        i1 = f"""insert into topics (subject_id, subject_name, topic_id, topic_name, 
-        subtopic_id, subtopic_name) values (
-        '{subjectRow['subject_id']}', '{subjectRow['subject_name']}', 
-        '{r.topic_id}', '{subjectRow['topic_name']}', 
-        '{subtopic_id}', '{r.subtopic_name}')
-        """
-        i1Count = dbconnect.execSQL(i1)
-
-        returnD = {"message": "created subtopic", "subtopic_id": subtopic_id}
-        return returnD
-
-    elif r.subject_id:
-        # to do: flow in case we're creating topic and subtopic both
-        return {"message": "WIP"}
-    
-    elif r.subject_name:
-        # to do: flow in case we're creating subject, topic and subtopic
-        return {"message": "WIP"}
-    
     else:
-        raise HTTPException(status_code=400, detail="Valid topic_id needed")
-        
+        # new subject
+        new_subject = True
+        subject_name = r.subject
+        existing_subject_ids = df1.drop_duplicates('subject_id').copy()['subject_id'].tolist()
+        subject_id = cf.create_unique_slug(subject_name, existing_subject_ids)
+
+    
+    # check if topic existing
+    df3 = df1[df1['topic_id'] == r.topic].copy()
+    if len(df3):
+        topic_id = r.topic
+        topic_name = df2['topic_name'].values[0]
+    else:
+        # new topic
+        new_topic = True
+        topic_name = r.topic
+        existing_topic_ids = df1.drop_duplicates('topic_id').copy()['topic_id'].tolist()
+        topic_id = cf.create_unique_slug(topic_name, existing_topic_ids)
+    
+    
+    # check if subtopic name is existing
+    if not new_topic and not new_subject:
+        df4 = df1.query(f'subject_id == "{subject_id}" and topic_id == "{topic_id}"').copy()
+        if r.subtopic in df4['subtopic_name'].tolist():
+            raise HTTPException(status_code=400, detail="Repeating subtopic name in the same group")
+    
+    subtopic_name = r.subtopic
+    existing_subtopic_ids = df1['subtopic_id'].tolist()
+    subtopic_id = cf.create_unique_slug(subtopic_name, existing_subtopic_ids)
+
+    i1 = f"""insert into topics (subject_name, subject_id, topic_name, topic_id, subtopic_name, subtopic_id)
+    values (
+    '{subject_name}','{subject_id}', 
+    '{topic_name}','{topic_id}', 
+    '{subtopic_name}','{subtopic_id}'
+    )
+    """
+    i1Count = dbconnect.execSQL(i1)
+
+    if not i1Count:
+        raise HTTPException(status_code=500, detail="Error, Could not add in DB")
+
+    returnD = {"subtopic_added": True, "subtopic_id": subtopic_id, "new_subject": new_subject, "new_topic": new_topic}
+    return returnD
+    
     
 ###############
 
@@ -120,3 +137,46 @@ def fetchDropdown(
     }
     returnD["data"] = df1.to_dict(orient="records")
     return returnD
+
+
+
+class edit_topic_payload(BaseModel):
+    col: str
+    # idcol: str
+    newVal: str
+    oldVal: str
+
+@app.put("/api/topics/edit", tags=["topics"])
+def edit_topic(r: edit_topic_payload, x_access_token: str = Header(...)):
+    print("edit_topic PUT api call")
+    # to do : validations
+
+    u1 = f"""update topics
+    set {r.col} = '{r.newVal}'
+    where {r.col} = '{r.oldVal}'
+    """
+    u1Count = dbconnect.execSQL(u1)
+
+    returnD = {"updated_rows": u1Count}
+    return returnD
+
+
+
+@app.delete("/api/topics/delete", tags=["topics"])
+def delete_topic(subtopic_id: str, x_access_token: str = Header(...)):
+    print("delete_topic DELETE api call")
+
+    s1 = f"select count(*) from questionbank where subtopic_id = '{subtopic_id}'"
+    c1 = dbconnect.makeQuery(s1, output="oneValue")
+
+    if c1:
+        raise HTTPException(status_code=400, detail="There are existing questions under this subtopic. Delete them first.")
+        return
+    
+    d1 = f"delete from topics where subtopic_id = '{subtopic_id}'"
+    d1Count = dbconnect.execSQL(d1)
+    if not d1Count:
+        raise HTTPException(status_code=500, detail="Could not delete subtopic_id from DB")
+        return
+    
+    return {"deleted": True, "count": d1Count}

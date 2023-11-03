@@ -25,7 +25,7 @@ import api_questions
 import api_topics
 import api_files
 import api_export
-
+import api_users
 
 root = os.path.dirname(__file__)
 UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", "data/uploads")

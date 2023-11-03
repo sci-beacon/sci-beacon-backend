@@ -5,7 +5,7 @@ import json
 
 # import yaml
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Header
 from pydantic import BaseModel
 from typing import List, Dict, Any
 
@@ -17,6 +17,8 @@ ANSWER_TYPES = ("MCQ_single", "InQuestion", "TrueFalse", "MTF")
 root = os.path.dirname(__file__)
 UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", "data/uploads")
 uploadFolder = os.path.join(root, UPLOAD_FOLDER)
+
+TEMPLATE_FOLDER = os.path.join(root, "templates")
 
 
 @app.get("/api/questions/list", tags=["questions"])
@@ -61,7 +63,7 @@ class add_question_payload(BaseModel):
 
 
 @app.post("/api/questions/add", tags=["questions"])
-def add_question(r: add_question_payload):
+def add_question(r: add_question_payload, x_access_token: str = Header(...)):
     global uploadFolder, ANSWER_TYPES
     s1 = f"select id from topics where subtopic_id = '{r.subtopic_id}'"
     checkTopic = dbconnect.makeQuery(s1, output="oneValue")
@@ -123,13 +125,37 @@ def add_question(r: add_question_payload):
 async def question_templates():
 
     # ANSWER_TYPES = ("MCQ_single", "InQuestion", "TrueFalse", "MTF")
-    data = {}
+    data = []
 
-    with open("sample1.yaml","r") as f:
-        data['Multiple Choice Question'] = f.read()
+    with open(os.path.join(TEMPLATE_FOLDER,"mcq.yaml"),"r") as f:
+        data.append({
+            "title": "Multiple Choice Question",
+            "template": f.read(),
+            "answer_type": "MCQ_single",
+        })
+        # data['Multiple Choice Question'] = f.read()
     
-    with open("sample4-MTF.yaml","r") as f:
-        data['Match the Following'] = f.read()
+    with open(os.path.join(TEMPLATE_FOLDER,"inquestion.yaml"),"r") as f:
+        data.append({
+            "title": "Only Question",
+            "template": f.read(),
+            "answer_type": "InQuestion",
+        })
 
+    with open(os.path.join(TEMPLATE_FOLDER,"mtf.yaml"),"r") as f:
+        data.append({
+            "title": "Match the Following",
+            "template": f.read(),
+            "answer_type": "MTF",
+        })
+        # data['Match the Following'] = f.read()
+
+    
+    with open(os.path.join(TEMPLATE_FOLDER,"truefalse.yaml"),"r") as f:
+        data.append({
+            "title": "True or False",
+            "template": f.read(),
+            "answer_type": "TrueFalse",
+        })
     returnD = {"data": data}
     return returnD

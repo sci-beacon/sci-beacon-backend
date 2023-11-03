@@ -1,3 +1,4 @@
 __pycache__/
 data/
 .python-version
+dev.env

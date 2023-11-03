@@ -10,23 +10,12 @@ CREATE TABLE users(
 CREATE INDEX users_i1 ON users (email);
 
 
-DROP TABLE IF EXISTS otps;
-CREATE TABLE otps(
+DROP TABLE IF EXISTS sessions;
+CREATE TABLE sessions(
     txnid TEXT NOT NULL PRIMARY KEY,
     user_id INTEGER NOT NULL,
     otp INTEGER NOT NULL,
-    created_on TIMESTAMP DEFAULT (datetime('now', 'utc')),
-    ip VARCHAR(100) NULL,
-    matched_on TIMESTAMP(0) NULL,
-    validity INTEGER NULL
-);
-
-
-DROP TABLE IF EXISTS sessions;
-CREATE TABLE sessions(
-    token VARCHAR(36) NOT NULL PRIMARY KEY,
-    user_id INT NOT NULL,
-    ip VARCHAR(100) NULL,
-    created_on TIMESTAMP DEFAULT (datetime('now', 'utc')),
-    expired boolean DEFAULT FALSE NOT NULL
+    token TEXT NULL,
+    ipadrr TEXT NULL,
+    created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
