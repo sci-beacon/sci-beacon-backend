@@ -30,7 +30,7 @@ def authenticate(token):
     
     user = dbconnect_admin.makeQuery(s1, output='oneJson', noprint=True)
     if not user:
-        print("rejected")
+        cf.logmessage("rejected")
         raise HTTPException(status_code=401, detail="Invalid login")
     
     return user['user_id'], user['email']
@@ -42,7 +42,7 @@ class emailOTP_payload(BaseModel):
     
 @app.post("/api/users/emailOTP", tags=["users"])
 def emailOTP(r: emailOTP_payload, X_Forwarded_For: Optional[str] = Header(None)):
-    print("emailOTP POST api call")
+    cf.logmessage("emailOTP POST api call")
     email = r.email
     # to do: validation
 
@@ -57,7 +57,7 @@ def emailOTP(r: emailOTP_payload, X_Forwarded_For: Optional[str] = Header(None))
     otp = random.randint(1000,9999)
     
     i2 = f"""insert into sessions (txnid, user_id, otp) values ('{txnid}', {user_id},{otp})"""
-    i2Count = dbconnect_admin.execSQL(i2)
+    i2Count = dbconnect_admin.execSQL(i2, noprint=True)
 
     content = f"""<h2>OTP: {otp}</h2>
     <p>For Sci-beacon login</p>
@@ -118,6 +118,7 @@ def verifyOTP(r: verifyOTP_payload, X_Forwarded_For: Optional[str] = Header(None
 
 @app.get("/api/users/loggedincheck", tags=["users"])
 def loggedincheck(x_access_token: str = Header(...)):
+    cf.logmessage("loggedincheck GET api call")
 
     s1 = f"""select t2.email, t1.user_id
     from sessions as t1
@@ -125,7 +126,7 @@ def loggedincheck(x_access_token: str = Header(...)):
     on t1.user_id = t2.user_id
     where token = '{x_access_token}'
     """
-    profile = dbconnect_admin.makeQuery(s1, output="oneJson")
+    profile = dbconnect_admin.makeQuery(s1, output="oneJson", noprint=True)
 
     if not profile:
         raise HTTPException(status_code=401, detail="Unauthorized")

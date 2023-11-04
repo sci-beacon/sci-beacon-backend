@@ -3,7 +3,7 @@ import sqlite3
 import os
 import pandas as pd
 
-from commonfuncs import remove_sql_comments
+from commonfuncs import remove_sql_comments, logmessage
 
 root = os.path.dirname(__file__)
 DB_FILENAME = os.environ.get("DB_FILENAME","questionbank.db")
@@ -27,19 +27,19 @@ def makeQuery(
     oneJson: First row, as dict
     """
     if not isinstance(s1, str):
-        print("query needs to be a string")
+        logmessage("query needs to be a string")
         return False
     if ";" in s1:
-        print("; not allowed")
+        logmessage("; not allowed")
         return False
 
     if not noprint:
         # keeping auth check and some other queries out
         skipPrint = ["where token=", ".STArea()", "STGeomFromText"]
         if not any([(x in s1) for x in skipPrint]):
-            print(f"Query: {' '.join(s1.split())}")
+            logmessage(f"Query: {' '.join(s1.split())}")
         else:
-            print(f"Query: {' '.join(s1.split())[:20]}")
+            logmessage(f"Query: {' '.join(s1.split())[:20]}")
 
     global dbFolder, DB_FILENAME
     # Make SQLite connection in read-only mode
@@ -75,7 +75,7 @@ def makeQuery(
 def execSQL(s1, noprint=False):
     # if not noprint: print(' '.join(s1.split())[:200])
     if not noprint:
-        print(" ".join(s1.split()))
+        logmessage(" ".join(s1.split()))
     
     global dbFolder, DB_FILENAME
     conn = sqlite3.connect(os.path.join(dbFolder, DB_FILENAME ))
@@ -85,8 +85,8 @@ def execSQL(s1, noprint=False):
         conn.commit()
         affected = cursor.rowcount
     except Exception as e:
-        print("DB error")
-        print(e)
+        logmessage("DB error")
+        logmessage(e)
         affected = None
     finally:    
         conn.close()
@@ -96,7 +96,7 @@ def execSQL(s1, noprint=False):
 def initiate():
     global dbFolder, DB_FILENAME, DB_SCHEMAFILE
     if not os.path.isfile(os.path.join(dbFolder, DB_FILENAME )):
-        print(f"Creating {DB_FILENAME}")
+        logmessage(f"Creating {DB_FILENAME}")
         with open(os.path.join(root, DB_SCHEMAFILE), 'r') as f:
             sql = f.read()
         
@@ -106,7 +106,7 @@ def initiate():
             execSQL(statement)
 
     else:
-        print(f"Found {DB_FILENAME}")
+        logmessage(f"Found {DB_FILENAME}")
 
 # startup: initiate if db not found
 initiate()

@@ -21,7 +21,7 @@ def makeAddress(emails):
     if type(emails) == str:
         holder = emails.strip().split('@')
         if len(holder) != 2:
-            print("makeAddress: Invalid email id:",emails)
+            cf.logmessage("makeAddress: Invalid email id:",emails)
             return os.environ.get('EMAIL_SENDER','')
         return Address(holder[0],holder[0],holder[1])
     elif type(emails) == list:
@@ -29,7 +29,7 @@ def makeAddress(emails):
         for oneEmail in emails:
             holder = oneEmail.strip().split('@')
             if len(holder) != 2:
-                print("makeAddress: Invalid email id:",oneEmail)
+                cf.logmessage("makeAddress: Invalid email id:",oneEmail)
                 continue
             collector.append(Address(holder[0],holder[0],holder[1]))
         # after for loop:
@@ -54,10 +54,10 @@ def sendEmail(content, subject, recipients, cc=None, html=None):
     if html:
         msg.add_alternative(f"<!DOCTYPE html><html><body>{html}</body></html>", subtype = 'html')
 
-    print('to:',msg['To'])
-    # print('cc:',msg['Cc'])
-    # print('subject:',msg['Subject'])
-    # print(content)
+    cf.logmessage('to:',msg['To'])
+    # cf.logmessage('cc:',msg['Cc'])
+    # cf.logmessage('subject:',msg['Subject'])
+    # cf.logmessage(content)
     
     # login to server and send the actual email
     # try:    
@@ -80,9 +80,9 @@ def sendEmail(content, subject, recipients, cc=None, html=None):
 
 # @app.post("/API/emailTest", tags=["email"])
 # def emailTest(req: emailTestReq, x_access_key: Optional[str] = Header(None)):
-#     print("emailTest api call")
+#     cf.logmessage("emailTest api call")
 #     username, role = authenticate(x_access_key, allowed_roles=['admin'])
     
 #     status = sendEmail(req.content, req.subject, req.recipients, req.cc)
-#     print(f"Email status: {status}")
+#     cf.logmessage(f"Email status: {status}")
 #     return {'message':'success', 'status':status}

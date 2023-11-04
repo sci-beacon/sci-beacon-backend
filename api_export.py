@@ -2,11 +2,11 @@
 import os
 import uuid
 import string
-import re
+# import re
 
 from fastapi import HTTPException
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List
 from docx import Document
 from docx.shared import Cm
 
@@ -40,16 +40,16 @@ def insert_image(filename, p, embeds):
     
     w_cm = round(w / DPC,2)
     h_cm = round(h / DPC,2)
-    print("image width, height:",w_cm, h_cm)
+    cf.logmessage("image width, height:",w_cm, h_cm)
 
     if w_cm > PAGE_W*0.65:
         w_cm = PAGE_W*0.65
-        print("Image too wide! New width:",w_cm)
+        cf.logmessage("Image too wide! New width:",w_cm)
         p.add_run().add_picture(image_path, width=Cm(w_cm))
 
     elif  h_cm > PAGE_H*0.65:
         h_cm = PAGE_H*0.65
-        print("Image too tall! New height:",h_cm)
+        cf.logmessage("Image too tall! New height:",h_cm)
         p.add_run().add_picture(image_path, height=Cm(h_cm))
     else:
         p.add_run().add_picture(image_path, width=Cm(w_cm))

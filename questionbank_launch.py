@@ -2,16 +2,26 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from brotli_asgi import BrotliMiddleware
-from fastapi.staticfiles import StaticFiles # static html files deploying
+from fastapi.staticfiles import StaticFiles  # static html files deploying
+import logging
 
 root = os.path.dirname(__file__)
+
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt='%Y-%m-%d %H:%M:%S',
+    # level=logging.INFO,
+    filename=os.path.join(root, "log.txt"),
+)
 
 #########################################################
 
 app = FastAPI()
 
 # Enable CORS for all origins
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
+)
 
 # Enable Brotli compression
 app.add_middleware(BrotliMiddleware)
@@ -34,5 +44,5 @@ uploadFolder = os.path.join(root, UPLOAD_FOLDER)
 EXPORT_FOLDER = os.environ.get("EXPORT_FOLDER", "data/exports")
 exportFolder = os.path.join(root, EXPORT_FOLDER)
 
-app.mount("/images", StaticFiles(directory=uploadFolder, html = False), name="images")
-app.mount("/exports", StaticFiles(directory=exportFolder, html = False), name="exports")
+app.mount("/images", StaticFiles(directory=uploadFolder, html=False), name="images")
+app.mount("/exports", StaticFiles(directory=exportFolder, html=False), name="exports")

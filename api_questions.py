@@ -26,6 +26,7 @@ def questionsList(
     category: str = None,
     value: str = None,
 ):
+    cf.logmessage("questionsList GET api call")
     if category in ("subject_id", "topic_id", "subtopic_id"):
         pattern = "^[a-z0-9-]+$"
         if not re.match(pattern, value):
@@ -64,6 +65,7 @@ class add_question_payload(BaseModel):
 
 @app.post("/api/questions/add", tags=["questions"])
 def add_question(r: add_question_payload, x_access_token: str = Header(...)):
+    cf.logmessage("add_question POST api call")
     global uploadFolder, ANSWER_TYPES
     s1 = f"select id from topics where subtopic_id = '{r.subtopic_id}'"
     checkTopic = dbconnect.makeQuery(s1, output="oneValue")
@@ -122,8 +124,8 @@ def add_question(r: add_question_payload, x_access_token: str = Header(...)):
 
 
 @app.get("/api/questions/templates", tags=["questions"])
-async def question_templates():
-
+def question_templates():
+    cf.logmessage("question_templates GET api call")
     # ANSWER_TYPES = ("MCQ_single", "InQuestion", "TrueFalse", "MTF")
     data = []
 

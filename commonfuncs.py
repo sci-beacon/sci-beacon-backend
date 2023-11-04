@@ -1,8 +1,13 @@
 # commonfuncs.py
 
 import re
+import os
+import datetime
 from ruamel.yaml import YAML
 from io import StringIO
+
+root = os.path.dirname(__file__)
+timeOffset = 5.5
 
 def create_unique_slug(text, existing_slugs):
     # Remove non-alphanumeric characters and convert to lowercase
@@ -126,3 +131,10 @@ def render_html(content_yaml):
     
     return html_content
 
+def logmessage( *content ):
+    global timeOffset
+    timestamp = '{:%Y-%m-%d %H:%M:%S} :'.format(datetime.datetime.utcnow() + datetime.timedelta(hours=timeOffset)) # from https://stackoverflow.com/a/26455617/4355695
+    line = ' '.join(str(x) for x in list(content)) # from https://stackoverflow.com/a/3590168/4355695
+    print(line) # print to screen also
+    with open(os.path.join(root,'log.txt'), 'a') as f:
+        print(timestamp, line, file=f) # file=f argument at end writes to file. from https://stackoverflow.com/a/2918367/4355695

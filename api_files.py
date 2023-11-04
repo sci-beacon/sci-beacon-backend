@@ -49,6 +49,7 @@ def image_size(filename):
 def uploadFile(
         uploadFiles: List[UploadFile] = File(...)
     ):
+    cf.logmessage("uploadFile POST api call")
     # to do: process and save file; return id
     file1 = uploadFiles[0]
     filename = file1.filename

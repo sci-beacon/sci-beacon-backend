@@ -2,7 +2,6 @@
 
 from fastapi import HTTPException, Header
 from pydantic import BaseModel
-from typing import List
 
 import dbconnect
 from questionbank_launch import app
@@ -46,7 +45,7 @@ class add_topic_payload(BaseModel):
 @app.post("/api/topics/add", tags=["topics"])
 def addTopic(r: add_topic_payload, x_access_token: str = Header(...) ):
     # check if subject and topic are existing *_id values. else create their slugs.
-    print("addTopic POST api call")
+    cf.logmessage("addTopic POST api call")
 
     new_subject = False
     new_topic = False
@@ -115,7 +114,7 @@ def fetchDropdown(
     parent_category: str = None,
     value: str = None,
 ):
-
+    cf.logmessage("fetchDropdown GET api call")
     s1 = "select distinct subject_id, subject_name from topics"
     
     if parent_category:
@@ -148,7 +147,7 @@ class edit_topic_payload(BaseModel):
 
 @app.put("/api/topics/edit", tags=["topics"])
 def edit_topic(r: edit_topic_payload, x_access_token: str = Header(...)):
-    print("edit_topic PUT api call")
+    cf.logmessage("edit_topic PUT api call")
     # to do : validations
 
     u1 = f"""update topics
@@ -164,7 +163,7 @@ def edit_topic(r: edit_topic_payload, x_access_token: str = Header(...)):
 
 @app.delete("/api/topics/delete", tags=["topics"])
 def delete_topic(subtopic_id: str, x_access_token: str = Header(...)):
-    print("delete_topic DELETE api call")
+    cf.logmessage("delete_topic DELETE api call")
 
     s1 = f"select count(*) from questionbank where subtopic_id = '{subtopic_id}'"
     c1 = dbconnect.makeQuery(s1, output="oneValue")
