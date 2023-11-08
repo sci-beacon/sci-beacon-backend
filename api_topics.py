@@ -6,6 +6,7 @@ from pydantic import BaseModel
 import dbconnect
 from questionbank_launch import app
 import commonfuncs as cf
+from api_users import authenticate
 
 
 ###########################
@@ -46,6 +47,8 @@ class add_topic_payload(BaseModel):
 def addTopic(r: add_topic_payload, x_access_token: str = Header(...) ):
     # check if subject and topic are existing *_id values. else create their slugs.
     cf.logmessage("addTopic POST api call")
+
+    user_id, email = authenticate(x_access_token)
 
     new_subject = False
     new_topic = False
@@ -148,6 +151,9 @@ class edit_topic_payload(BaseModel):
 @app.put("/api/topics/edit", tags=["topics"])
 def edit_topic(r: edit_topic_payload, x_access_token: str = Header(...)):
     cf.logmessage("edit_topic PUT api call")
+    
+    user_id, email = authenticate(x_access_token)
+
     # to do : validations
 
     u1 = f"""update topics
@@ -164,6 +170,8 @@ def edit_topic(r: edit_topic_payload, x_access_token: str = Header(...)):
 @app.delete("/api/topics/delete", tags=["topics"])
 def delete_topic(subtopic_id: str, x_access_token: str = Header(...)):
     cf.logmessage("delete_topic DELETE api call")
+
+    user_id, email = authenticate(x_access_token)
 
     s1 = f"select count(*) from questionbank where subtopic_id = '{subtopic_id}'"
     c1 = dbconnect.makeQuery(s1, output="oneValue")

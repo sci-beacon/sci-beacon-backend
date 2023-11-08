@@ -3,13 +3,14 @@ import uuid
 import os
 
 from fastapi import HTTPException, Header, File, UploadFile, Form
-from pydantic import BaseModel
+# from pydantic import BaseModel
 from typing import List
 from PIL import Image, ImageOps
 
-import dbconnect
+# import dbconnect
 from questionbank_launch import app
 import commonfuncs as cf
+from api_users import authenticate
 
 root = os.path.dirname(__file__)
 UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER","data/uploads")
@@ -47,9 +48,13 @@ def image_size(filename):
 # API CALLS
 @app.post("/api/files/upload", tags=["files"])
 def uploadFile(
-        uploadFiles: List[UploadFile] = File(...)
+        uploadFiles: List[UploadFile] = File(...),
+        x_access_token: str = Header(...)
     ):
     cf.logmessage("uploadFile POST api call")
+
+    user_id, email = authenticate(x_access_token)
+
     # to do: process and save file; return id
     file1 = uploadFiles[0]
     filename = file1.filename

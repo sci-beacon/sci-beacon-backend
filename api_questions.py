@@ -12,6 +12,8 @@ from typing import List, Dict, Any
 import dbconnect
 from questionbank_launch import app
 import commonfuncs as cf
+from api_users import authenticate
+
 
 ANSWER_TYPES = ("MCQ_single", "InQuestion", "TrueFalse", "MTF")
 root = os.path.dirname(__file__)
@@ -66,6 +68,9 @@ class add_question_payload(BaseModel):
 @app.post("/api/questions/add", tags=["questions"])
 def add_question(r: add_question_payload, x_access_token: str = Header(...)):
     cf.logmessage("add_question POST api call")
+
+    user_id, email = authenticate(x_access_token)
+
     global uploadFolder, ANSWER_TYPES
     s1 = f"select id from topics where subtopic_id = '{r.subtopic_id}'"
     checkTopic = dbconnect.makeQuery(s1, output="oneValue")
@@ -117,8 +122,13 @@ def add_question(r: add_question_payload, x_access_token: str = Header(...)):
     ('{r.subtopic_id}', '{title}', '{escaped_text}', '{json.dumps(embedsList)}')
     """
     i1Count = dbconnect.execSQL(i1)
+    if not i1Count:
+        raise HTTPException(
+            status_code=500, detail="Unable to add question to DB"
+        )
+        return
 
-    returnD = {"message": "Question added successfully"}
+    returnD = {"message": "Question added successfully", "count": i1Count}
     return returnD
 
 
@@ -160,4 +170,20 @@ def question_templates():
             "answer_type": "TrueFalse",
         })
     returnD = {"data": data}
+    return returnD
+
+
+
+
+@app.delete("/api/questions/delete")
+def delete_question(qid: int, x_access_token: str = Header(...)):
+    cf.logmessage("delete_question DELETE api call")
+
+    user_id, email = authenticate(x_access_token)
+
+    d1 = f"delete from questionbank where id={qid}"
+
+    d1Count = dbconnect.execSQL(d1)
+
+    returnD = {"deleted": True, "count": d1Count}
     return returnD
