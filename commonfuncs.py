@@ -138,3 +138,12 @@ def logmessage( *content ):
     print(line) # print to screen also
     with open(os.path.join(root,'log.txt'), 'a') as f:
         print(timestamp, line, file=f) # file=f argument at end writes to file. from https://stackoverflow.com/a/2918367/4355695
+
+
+def is_valid_email(email):
+    # Regular expression for a valid email address
+    email_pattern = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+
+    # Use re.match to check if the email matches the pattern
+    match = re.match(email_pattern, email)
+    return bool(match)

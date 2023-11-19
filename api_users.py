@@ -134,3 +134,83 @@ def loggedincheck(x_access_token: str = Header(...)):
     
     returnD = {'logged_in':True, 'profile':profile }
     return returnD
+
+
+###########################################
+# Admin management
+
+@app.get("/api/admins/list", tags=["admin"])
+def admins_list(x_access_token: str = Header(...)):
+    s1 = "select email from users order by user_id"
+    emails = dbconnect_admin.makeQuery(s1, output='column')
+    returnD = {"admins": emails}
+    return returnD
+
+
+@app.put("/api/admins/add_admin", tags=["admin"])
+def add_admin(email:str, x_access_token: str = Header(...), X_Forwarded_For: Optional[str] = Header(None)):
+    cf.logmessage("add_admin GET api call")
+
+    a_user_id, a_email = authenticate(x_access_token)
+    if not X_Forwarded_For: X_Forwarded_For = 'local'
+
+    # validation
+    email = email.lower()
+    if not cf.is_valid_email(email):
+        raise HTTPException(status_code=400, detail="Invalid email")
+        return
+    
+    s1 = f"""select email from users where email = '{email}'
+    """
+    profile = dbconnect_admin.makeQuery(s1, output="oneJson", noprint=True)
+
+    if profile:
+        raise HTTPException(status_code=409, detail="This email is already registered")
+        return
+    
+    i1 = f"""insert into users (email, created_by,creator_ip) values (
+        '{email}', {a_user_id}, '{X_Forwarded_For}'
+    )"""
+    i1Count = dbconnect_admin.execSQL(i1)
+    if not i1Count:
+        raise HTTPException(status_code=500, detail="Unable to add in DB, pls contact admin")
+        return
+    
+    returnD = {"addedCount": i1Count}
+    return returnD
+
+
+@app.delete("/api/admins/remove_admin", tags=["admin"])
+def remove_admin(email:str, x_access_token: str = Header(...), X_Forwarded_For: Optional[str] = Header(None)):
+    cf.logmessage("remove_admin GET api call")
+
+    a_user_id, a_email = authenticate(x_access_token)
+    if not X_Forwarded_For: X_Forwarded_For = 'local'
+
+    # validation
+    email = email.lower()
+    if not cf.is_valid_email(email):
+        raise HTTPException(status_code=400, detail="Invalid email")
+        return
+    
+    if a_email == email :
+        raise HTTPException(status_code=409, detail="You cannot offboard yourself, get another admin to do it")
+        return
+
+    s1 = f"select * from users where email = '{email}'"
+    row = dbconnect_admin.makeQuery(s1, output="oneJson")
+
+    if not row:
+        raise HTTPException(status_code=400, detail="No entry for this email")
+        return
+    
+    # clear all sessions
+    d1 = f"""delete from sessions where user_id = {row['user_id']}"""
+    d1Count = dbconnect_admin.execSQL(d1)
+
+    d2 = f"""delete from users where user_id = {row['user_id']}"""
+    d2Count = dbconnect_admin.execSQL(d2)
+
+    returnD = { "users_deleted": d2Count, "sessions_deleted": d1Count}
+    return returnD
+

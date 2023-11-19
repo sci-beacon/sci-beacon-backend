@@ -3,9 +3,9 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE users(
     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE,
-    created_on TIMESTAMP DEFAULT (datetime('now', 'utc')),
+    created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by INTEGER NULL,
-    creator_ip VARCHAR(100) NULL
+    creator_ip TEXT NULL
 );
 CREATE INDEX users_i1 ON users (email);
 

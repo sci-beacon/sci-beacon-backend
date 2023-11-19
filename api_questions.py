@@ -175,7 +175,7 @@ def question_templates():
 
 
 
-@app.delete("/api/questions/delete")
+@app.delete("/api/questions/delete", tags=["questions"])
 def delete_question(qid: int, x_access_token: str = Header(...)):
     cf.logmessage("delete_question DELETE api call")
 
