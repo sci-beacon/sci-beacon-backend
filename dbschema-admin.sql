@@ -19,3 +19,5 @@ CREATE TABLE sessions(
     ipadrr TEXT NULL,
     created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+INSERT INTO users (email) VALUES ('nikhil.js@gmail.com');
