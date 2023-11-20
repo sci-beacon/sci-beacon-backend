@@ -40,6 +40,9 @@ def cleanup(d):
     # 2023-11-20 : cleanup function needed to resolve issue where yaml loader interprets lines having only "{{img:img1}}"
     # as {ordereddict([('img:img2', None)]): None}
     for key in d.keys():
+        if key == "embeds":
+            print("cleanup: skpping embeds")
+            continue
         if isinstance(d[key], comments.CommentedMap):
             print("replacing",d[key])
             d[key] = str(d[key]).replace("{ordereddict([('",'{{').replace("', None)]): None}","}}")
