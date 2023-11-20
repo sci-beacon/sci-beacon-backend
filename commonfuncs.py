@@ -3,7 +3,7 @@
 import re
 import os
 import datetime
-from ruamel.yaml import YAML
+from ruamel.yaml import YAML, comments
 from io import StringIO
 
 root = os.path.dirname(__file__)
@@ -35,8 +35,28 @@ def quoteNcomma(a):
 
 
 # YAML conversion funcions
+
+def cleanup(d):
+    # 2023-11-20 : cleanup function needed to resolve issue where yaml loader interprets lines having only "{{img:img1}}"
+    # as {ordereddict([('img:img2', None)]): None}
+    for key in d.keys():
+        if isinstance(d[key], comments.CommentedMap):
+            print("replacing",d[key])
+            d[key] = str(d[key]).replace("{ordereddict([('",'{{').replace("', None)]): None}","}}")
+        if isinstance(d[key], list):
+            collector = []
+            for l in d[key]:
+                if isinstance(l, comments.CommentedMap):
+                    print("replacing",l)
+                    collector.append(str(l).replace("{ordereddict([('",'{{').replace("', None)]): None}","}}"))
+                else:
+                    collector.append(l)
+            d[key] = collector
+    return d
+
 def yaml2dict(y):
-    return YAML().load(y)
+    d = YAML().load(y)
+    return cleanup(d)
 
 def dict2yaml(d):
     output_stream = StringIO()
