@@ -58,29 +58,44 @@ def addTopic(r: add_topic_payload, x_access_token: str = Header(...) ):
     df1 = dbconnect.makeQuery(s1, output="df")
 
     # check if subject existing
-    df2 = df1[df1['subject_id']== r.subject].copy()
-    if len(df2):
-        subject_id = r.subject
-        subject_name = df2['subject_name'].values[0]
+    new_subject = False
+    if len(df1):
+        existing_subject_ids = df1.drop_duplicates('subject_id').copy()['subject_id'].tolist()
+
+        df2 = df1[df1['subject_id']== r.subject].copy()
+        if len(df2):
+            subject_id = r.subject
+            subject_name = df2['subject_name'].values[0]
+        else:
+            new_subject = True
 
     else:
-        # new subject
+        # new subject``
         new_subject = True
+        existing_subject_ids = []
+    
+    if new_subject:
         subject_name = r.subject
-        existing_subject_ids = df1.drop_duplicates('subject_id').copy()['subject_id'].tolist()
         subject_id = cf.create_unique_slug(subject_name, existing_subject_ids)
 
     
     # check if topic existing
-    df3 = df1[df1['topic_id'] == r.topic].copy()
-    if len(df3):
-        topic_id = r.topic
-        topic_name = df2['topic_name'].values[0]
+    new_topic = False
+    if len(df1):
+        existing_topic_ids = df1.drop_duplicates('topic_id').copy()['topic_id'].tolist()
+        df3 = df1[df1['topic_id'] == r.topic].copy()
+        if len(df3):
+            topic_id = r.topic
+            topic_name = df2['topic_name'].values[0]
+        else:
+            new_topic = True
     else:
         # new topic
         new_topic = True
+        existing_topic_ids = []
+    
+    if new_topic:
         topic_name = r.topic
-        existing_topic_ids = df1.drop_duplicates('topic_id').copy()['topic_id'].tolist()
         topic_id = cf.create_unique_slug(topic_name, existing_topic_ids)
     
     
@@ -91,7 +106,10 @@ def addTopic(r: add_topic_payload, x_access_token: str = Header(...) ):
             raise HTTPException(status_code=400, detail="Repeating subtopic name in the same group")
     
     subtopic_name = r.subtopic
-    existing_subtopic_ids = df1['subtopic_id'].tolist()
+    if len(df1):
+        existing_subtopic_ids = df1['subtopic_id'].tolist()
+    else:
+        existing_subtopic_ids = []
     subtopic_id = cf.create_unique_slug(subtopic_name, existing_subtopic_ids)
 
     i1 = f"""insert into topics (subject_name, subject_id, topic_name, topic_id, subtopic_name, subtopic_id)
