@@ -101,6 +101,8 @@ def int_to_letter(N):
 
 
 def html_formatting(x, embeds={}):
+    if not isinstance(x, str):
+        x = str(x)
     if "\n" in x:
         x = x.replace('\n','<br>')
     if r"{{img:" in x:
