@@ -9,6 +9,8 @@ from pydantic import BaseModel
 from typing import List
 from docx import Document
 from docx.shared import Cm
+from PIL import Image
+from io import BytesIO
 
 import dbconnect
 from questionbank_launch import app
@@ -33,10 +35,29 @@ DPC = 37.8 # dots per cm, equivalent to 96 dpi
 #####################
 # FUNCTIONS
 
+def image_convert_to_png(image_path):
+    # doing this because python-docx doesn't support webp. Do in-program conversion to png object before embedding in word file.
+     with Image.open(image_path) as img:
+        png_image = img.convert("RGBA")
+
+        # handling files with transparency:
+        # Create a white background image with the same size as the PNG image
+        white_background = Image.new("RGBA", png_image.size, (255, 255, 255, 255))
+        
+        # Composite the PNG image onto the white background
+        final_image = Image.alpha_composite(white_background, png_image)
+        
+        png_buffer = BytesIO()
+        final_image.save(png_buffer, format="PNG")
+        png_buffer.seek(0)
+        return png_buffer
+
 def insert_image(filename, p, embeds):
     global uploadFolder, DPC, PAGE_H, PAGE_W
     image_path = os.path.join(uploadFolder, embeds.get(filename))
     w, h = image_size(image_path)
+
+    png_object = image_convert_to_png(image_path)
     
     w_cm = round(w / DPC,2)
     h_cm = round(h / DPC,2)
@@ -45,14 +66,14 @@ def insert_image(filename, p, embeds):
     if w_cm > PAGE_W*0.65:
         w_cm = PAGE_W*0.65
         cf.logmessage("Image too wide! New width:",w_cm)
-        p.add_run().add_picture(image_path, width=Cm(w_cm))
+        p.add_run().add_picture(png_object, width=Cm(w_cm))
 
     elif  h_cm > PAGE_H*0.65:
         h_cm = PAGE_H*0.65
         cf.logmessage("Image too tall! New height:",h_cm)
-        p.add_run().add_picture(image_path, height=Cm(h_cm))
+        p.add_run().add_picture(png_object, height=Cm(h_cm))
     else:
-        p.add_run().add_picture(image_path, width=Cm(w_cm))
+        p.add_run().add_picture(png_object, width=Cm(w_cm))
     return
 
 

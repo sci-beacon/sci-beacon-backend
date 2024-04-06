@@ -161,7 +161,7 @@ def logmessage( *content ):
     timestamp = '{:%Y-%m-%d %H:%M:%S} :'.format(datetime.datetime.utcnow() + datetime.timedelta(hours=timeOffset)) # from https://stackoverflow.com/a/26455617/4355695
     line = ' '.join(str(x) for x in list(content)) # from https://stackoverflow.com/a/3590168/4355695
     print(line) # print to screen also
-    with open(os.path.join(root,'log.txt'), 'a') as f:
+    with open(os.path.join(root,'logs','log.txt'), 'a') as f:
         print(timestamp, line, file=f) # file=f argument at end writes to file. from https://stackoverflow.com/a/2918367/4355695
 
 

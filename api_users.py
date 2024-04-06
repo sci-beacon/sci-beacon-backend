@@ -41,7 +41,7 @@ class emailOTP_payload(BaseModel):
     email: str
     
 @app.post("/api/users/emailOTP", tags=["users"])
-def emailOTP(r: emailOTP_payload, X_Forwarded_For: Optional[str] = Header(None)):
+async def emailOTP(r: emailOTP_payload, X_Forwarded_For: Optional[str] = Header(None)):
     cf.logmessage("emailOTP POST api call")
     email = r.email
     # to do: validation
@@ -67,8 +67,10 @@ def emailOTP(r: emailOTP_payload, X_Forwarded_For: Optional[str] = Header(None))
 
     textContent = f"OTP: {otp} for login"
     subject = f"OTP: {otp} for login"
-    status = sendEmail(content=textContent, subject=subject, recipients=email, cc=None, html=content)
-    
+    status = await sendEmail(html=content, subject=subject, recipient=email)
+    if not status:
+        raise HTTPException(status_code=500, detail="email not sent")
+
     returnD = {'email_sent' : True, 'txnid':txnid }
     return returnD
 

@@ -1,0 +1,21 @@
+name: sci-beacon-backend
+
+services:
+  sci-beacon-backend:
+    image: sci-beacon-backend
+    container_name: sci-beacon-backend
+    restart: always
+    # user: 1000:1000
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - "5501:5501"
+    env_file:
+        - ./dev.env
+    volumes:
+        - ./data/logs:/code/logs:rw
+        - ./data/database:/code/database:rw
+        - ./data/uploads:/code/uploads:rw
+        - ./data/exports:/code/exports:rw
+    command: uvicorn questionbank_launch:app --port 5501 --host 0.0.0.0 --workers 1 --no-access-log --root-path /sci-beacon-backend

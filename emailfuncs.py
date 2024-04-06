@@ -1,88 +1,113 @@
 # emailFunctions.py
-# as per https://docs.python.org/3/library/email.examples.html
-import smtplib
-from email.message import EmailMessage
-from email.headerregistry import Address
-from email.utils import make_msgid
-import pandas as pd
-import json, os
 
-from typing import Optional, List
-from pydantic import BaseModel
-from fastapi.responses import FileResponse
-from fastapi import HTTPException, Header, File, UploadFile, Form
+import os
+import json
+import asyncio
+import httpx
 
 import commonfuncs as cf
-# from api_users import authenticate, findRole
+
+EMAIL_API_KEY = os.environ.get('EMAIL_API_KEY')
+EMAIL_API_URL = os.environ.get('EMAIL_API_URL')
+EMAIL_SENDER = os.environ.get('EMAIL_SENDER')
+EMAIL_SENDER_NAME = os.environ.get('EMAIL_SENDER_NAME')
+
+async def handle_request(url, headers=None, rtype="get", payload=None):
+    attempts = 0
+
+    while attempts <= 50:
+        try:
+            # using httpx lib for async api calls, ref: https://www.python-httpx.org/async/
+            async with httpx.AsyncClient(verify=False, http2=True, timeout=None) as client:
+                if rtype == "post":
+                    r = await client.post(url, headers=headers, data=payload, follow_redirects=True)
+                
+                elif payload:
+                    r = await client.get(f"{url}?{payload}", headers=headers, follow_redirects=True)
+                    # r = requests.get(f"{url}?{payload}", headers=headers, verify=False)
+                else:
+                    r = await client.get(url, headers=headers, follow_redirects=True)
+                    # r = requests.get(f"{url}", headers=headers, verify=False)
 
 
-def makeAddress(emails):
-    # have to split "name@domain.com" into Address("name","name","domain.com"), and if multiple then have to string them together into tuple 
-    if type(emails) == str:
-        holder = emails.strip().split('@')
-        if len(holder) != 2:
-            cf.logmessage("makeAddress: Invalid email id:",emails)
-            return os.environ.get('EMAIL_SENDER','')
-        return Address(holder[0],holder[0],holder[1])
-    elif type(emails) == list:
-        collector = []
-        for oneEmail in emails:
-            holder = oneEmail.strip().split('@')
-            if len(holder) != 2:
-                cf.logmessage("makeAddress: Invalid email id:",oneEmail)
+            if 200 <= r.status_code < 300:
+                if len(r.text)==0:
+                    print("Got empty success response")
+                    return {}, r.elapsed.total_seconds()
+                else:
+                    return r.json(), r.elapsed.total_seconds()
+            
+            if r.status_code == 503:
+                attempts += 1
+                print(f"Got 503 service unavailable for {url}, attempting again after a minute")
+                await asyncio.sleep(60)  # Non-blocking sleep
                 continue
-            collector.append(Address(holder[0],holder[0],holder[1]))
-        # after for loop:
-        if len(collector): return tuple(collector)
-    # default
-    return os.environ.get('EMAIL_SENDER','')
+                
+            elif r.status_code == 502:
+                attempts += 1
+                print(f"Got 502 proxy error for {url}, attempting again after a minute")
+                await asyncio.sleep(60)
+                continue
+            
+            else:
+                r.raise_for_status()
+
+ 
+        except json.JSONDecodeError as e:
+            attempts += 1
+            if attempts > 50:
+                print(f"Hits to {url} giving non-JSON response, giving up after {attempts} attempts.")
+                print(e)
+                raise
+            print(f"Hit to {url} got non-JSON response, retrying after 20sec cooloff: {e}")
+            print(r.text)
+            await asyncio.sleep(20)
 
 
-def sendEmail(content, subject, recipients, cc=None, html=None):
-    '''
-    Emailing function. 
-    '''
-    # from https://docs.python.org/3/library/email.examples.html
-    msg = EmailMessage()
-    msg['Subject'] = subject
-    msg['From'] = makeAddress(os.environ.get('EMAIL_SENDER',''))
-    msg['To'] = makeAddress(recipients)
-    if cc: msg['Cc'] = makeAddress(cc)
-    msg.set_content(content)
+        except Exception as e:
+            print(f"Unknown exception when trying to hit {url}, pls investigate. Exiting program.")
+            print(e)
+            # print(r.status_code)
+            # print(r.text)
+
+            raise
+
+    print(f"Quitting after {attempts} attempts")
+    raise
+
+
+
+async def sendEmail(html, subject, recipient):
+    global EMAIL_API_KEY, EMAIL_API_URL, EMAIL_SENDER, EMAIL_SENDER_NAME
+    body = {  
+        "sender":{  
+            "name": EMAIL_SENDER_NAME,
+            "email": EMAIL_SENDER,
+        },
+        "to":[],
+        "subject": subject,
+        "htmlContent": html,
+    }
+
+    if isinstance(recipient, list):
+        for r in recipient:
+            body['to'].append({'email':r, 'name':r})
+    else:
+        body['to'].append({'email':recipient, 'name':recipient})
     
-    # adding html formatted body: from https://stackoverflow.com/a/58322776/4355695
-    if html:
-        msg.add_alternative(f"<!DOCTYPE html><html><body>{html}</body></html>", subtype = 'html')
-
-    cf.logmessage('to:',msg['To'])
-    # cf.logmessage('cc:',msg['Cc'])
-    # cf.logmessage('subject:',msg['Subject'])
-    # cf.logmessage(content)
+    headers = {
+        'accept': 'application/json',
+        'api-key': EMAIL_API_KEY,
+        'content-type': 'application/json',
+    }
+    res, t = await handle_request(EMAIL_API_URL, headers=headers, rtype="post", payload=json.dumps(body))
     
-    # login to server and send the actual email
-    # try:    
-    server = smtplib.SMTP_SSL(os.environ.get('EMAIL_SERVER',''), os.environ.get('EMAIL_PORT',''))  # We are specifying TLS here
-    server.ehlo()
-    server.login(os.environ.get('EMAIL_SENDER',''),os.environ.get('EMAIL_PW',''))
-    status = server.send_message(msg)
-    server.close()
-    return status
-    # except:
-    #     return {'exception':True}
-    
+    if res.get('messageId'):
+        cf.logmessage(f"{res['messageId']=}")
+        return True
+    else:
+        cf.logmessage(f"{res=}")
+        return False
 
 
-# class emailTestReq(BaseModel):
-#     recipients: List[str]
-#     subject: str
-#     content: str
-#     cc: Optional[str] = None
 
-# @app.post("/API/emailTest", tags=["email"])
-# def emailTest(req: emailTestReq, x_access_key: Optional[str] = Header(None)):
-#     cf.logmessage("emailTest api call")
-#     username, role = authenticate(x_access_key, allowed_roles=['admin'])
-    
-#     status = sendEmail(req.content, req.subject, req.recipients, req.cc)
-#     cf.logmessage(f"Email status: {status}")
-#     return {'message':'success', 'status':status}
