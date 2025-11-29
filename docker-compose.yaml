@@ -20,3 +20,8 @@ services:
         - ./data/uploads:/code/data/uploads:rw
         - ./data/exports:/code/data/exports:rw
     command: uvicorn questionbank_launch:app --port 5501 --host 0.0.0.0 --workers 1 --no-access-log --root-path /sci-beacon-backend
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: '0.5' 
