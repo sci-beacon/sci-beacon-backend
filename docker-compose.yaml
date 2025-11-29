@@ -1,11 +1,12 @@
 name: sci-beacon-backend
+# change user: 1001:1001 if the user's id changes (the user which owns the persistent data folders); comment out if root
 
 services:
   sci-beacon-backend:
     image: sci-beacon-backend
     container_name: sci-beacon-backend
     restart: always
-    # user: 1000:1000
+    user: 1001:1001
     build:
       context: ./
       dockerfile: Dockerfile
@@ -14,8 +15,8 @@ services:
     env_file:
         - ./dev.env
     volumes:
-        - ./data/logs:/code/logs:rw
-        - ./data/database:/code/database:rw
-        - ./data/uploads:/code/uploads:rw
-        - ./data/exports:/code/exports:rw
+        - ./data/logs:/code/logs
+        - ./data/database:/code/data/database:rw
+        - ./data/uploads:/code/data/uploads:rw
+        - ./data/exports:/code/data/exports:rw
     command: uvicorn questionbank_launch:app --port 5501 --host 0.0.0.0 --workers 1 --no-access-log --root-path /sci-beacon-backend
